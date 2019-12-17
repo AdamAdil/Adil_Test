@@ -1,0 +1,24 @@
+Downloading and Extracting Database Dump
+	create rds postgres instance (db.m5.large, 20 GB storage, postgres 11 was used by us, you can use a similar one)
+	download and extract db.zip from s3 https://bi-db-dumps.s3.eu-west-1.amazonaws.com/devops/docker-images/agcore-apps/db.zip
+	navigate to the directory where db.zip is extracted
+Install postgres client (psql client), use appropriate command other than apt install if on a different Linux distro
+	sudo apt install postgresql-client-common
+	sudo apt-get install postgresql-client-10
+Import db dump
+  psql -f db.dump --host aws.rds.host --port 5432 --username testdatabase1 --dbname testdatabase1
+  verify the db dump by connecting to the database using psql or some other DB client
+Prepare configuration
+	download config zip file from s3 https://bi-db-dumps.s3.eu-west-1.amazonaws.com/devops/docker-images/agcore-apps/configuration.zip
+	extract the zip file
+	modify the file configuration/aglite-config.properties to change the db details
+		jdbc.url=jdbc:postgresql://<aws.rds.hostname>:5432/testdatabase1
+		jdbc.username=testdatabase1
+		jdbc.password=testdatabase1
+	create a new configuration.zip file with the modified content
+upload/keep the configuration zip file in a place where it can be download through http url
+	option 1, s3 folder (public or accessible from the host running docker)
+	option 2, use a web server or file server to host the file
+running docker container
+	start docker with passing env variable CONFIG_FILE_URL that points to the url having the config zip
+		example CONFIG_FILE_URL=https://bi-db-dumps.s3.eu-west-1.amazonaws.com/devops/docker-images/agcore-apps/configuration.zip
