@@ -1,0 +1,49 @@
+---
+resources:
+- name: resource-commit
+  type: git
+  source:
+    uri: https://github.com/ArisGloba1/concourse-docker.git
+    username: 
+    password: 
+    branch: master
+
+jobs:
+- name: Creat&List-file
+  public: true
+  plan:
+  - get: resource-commit
+    trigger: true
+  - task: create-some-files
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: ubuntu}
+
+      inputs:
+      - name: resource-commit
+      outputs:
+      - name: AG-Dir
+
+      run:
+              #path: resource-commit/tutorials/basic/task-outputs-to-inputs/create_some_files.sh
+        path: sh
+        args: ["resource-commit/create_some_files.sh"]
+
+  - task: show-some-files
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: ubuntu}
+
+      inputs:
+      - name: resource-commit
+      - name: AG-Dir
+
+      run:
+              #path: resource-commit/tutorials/basic/task-outputs-to-inputs/show_files.sh
+        path: /bin/sh
+        args: ["resource-commit/show_files.sh"]
+     

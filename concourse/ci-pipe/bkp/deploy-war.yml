@@ -1,0 +1,53 @@
+resource_types:
+- name: artifactory
+  type: docker-image
+  source:
+    repository: pivotalservices/artifactory-resource
+
+
+resources:
+- name: uaa_sources
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/uaa.git
+    tag_filter: '3.6.*'
+
+- name: uaa-build
+  type: artifactory
+  source:
+    endpoint: http://10.194.1.32:3001/artifactory
+    repository: "/war-files/uaa"
+    regex: "cloudfoundry-identity-uaa-(?<version>.*).war"
+    username: admin
+    password: password
+    skip_ssl_verification: true
+
+jobs:
+- name: build
+  plan:
+  - get: uaa_sources
+    trigger: true
+  - task: build
+    config:
+      platform: linux
+      inputs:
+      - name: uaa_sources
+      outputs:
+      - name: uaa_war
+      image_resource:
+        type: docker-image
+        source: { repository: wolfoliver/uaa }
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          export TERM=dumb
+          cd uaa_sources
+          #          ./gradlew test
+          ./gradlew :cloudfoundry-identity-uaa:war
+          mv uaa/build/libs/cloudfoundry-identity-uaa-*.war ../uaa_war
+
+  - put: uaa-build
+    params:
+      file: uaa_war/cloudfoundry-identity-uaa-*.war

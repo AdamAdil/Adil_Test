@@ -1,0 +1,23 @@
+resources:
+- name: app_sources
+  type: git
+  source:
+    uri: https://github.com/ArisGloba1/concourse-docker.git
+- name: staging_deployment
+  type: cf
+  source:
+    uri: https://jdesxsrv4s3.arisglobal.com/svn/solar/Test/Test%202/
+    username: maidri
+    password: Test@123
+    organization: ArisGlobal
+    space: dev
+    skip_cert_check: false
+
+jobs:
+- name: Deploy-war
+  plan:
+  - get: app_sources
+    trigger: true
+  - put: staging_deployment
+    params:
+      manifest: app_sources/pipeline.yml
